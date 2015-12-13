@@ -1,5 +1,7 @@
 #pragma once
 
+#import "./libs/msado15.dll" no_namespace rename("EOF","ADOEOF") rename("BOF","ADOBOF")
+
 // RemainTimeTable
 struct RemainTime
 {
@@ -56,5 +58,5 @@ public:
 
 private:
 	// 保存打开的数据库连接智能指针
-	//_ConnectionPtr m_pConnection;
+	_ConnectionPtr m_pConnection;
 };
