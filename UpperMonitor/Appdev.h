@@ -1,6 +1,8 @@
 #pragma once
 
+#include "AdoMySQLHelper.h"
 
+#define DEFAULTREMAINTIME 20
 // CAppdev 对话框
 
 class CAppdev : public CDialogEx
@@ -18,6 +20,7 @@ private:
 	bool canIOPurse;
 	bool canIOWeb;
 	CFont m_font2;
+	CAdoMySQLHelper adoMySQLHelper;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持

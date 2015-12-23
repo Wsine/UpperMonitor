@@ -234,7 +234,35 @@ HBRUSH CAppdev::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
 }
 
 
-void CAppdev::OnBnClickedBtnstartweb()
-{
-	
+void CAppdev::OnBnClickedBtnstartweb() {
+	CString uid, temp;
+	unsigned char buff[1024];
+	int buff_len;
+
+	// 成功获取
+	if (find_14443(buff, &buff_len) == IFD_OK) {
+		uid.Empty();
+		for (int i = 0; i < buff_len; i++) {
+			// 将获得的UID数据（1 byte）转为16进制
+			temp.Format(_T("%02x"), buff[i]);
+			uid += temp;
+		}
+		// 插入一条新记录
+		CTime curTime = CTime::GetCurrentTime();
+		if (adoMySQLHelper.MySQL_Insert(OnRecord(uid, DEFAULTREMAINTIME, curTime.Format("%Y/%m/%d %H:%M:%S")))
+			&& adoMySQLHelper.MySQL_Insert(RemainTime(uid, DEFAULTREMAINTIME))){
+			// 更新状态栏成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("上机成功"));
+		}
+		else {
+			adoMySQLHelper.MySQL_Delete(uid, _T("OnTable"));
+			adoMySQLHelper.MySQL_Delete(uid, _T("RemainTimeTable"));
+			// 更新状态栏成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("插入新记录失败"));
+		}
+	}
+	else {
+		// 更新状态栏，失败
+		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+	}
 }
