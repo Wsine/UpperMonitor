@@ -26,7 +26,7 @@ BOOL CAdoMySQLHelper::MySQL_Connect(){
 		this->m_pConnection->CommandTimeout = 120;
 
 		// 连接数据库
-		this->m_pConnection->Open("DSN=MySQL5.7;Server=localhost;Database=ZD124UE_DEMO",
+		this->m_pConnection->Open("DSN=MySQL5.5;Server=localhost;Database=ZD124UE_DEMO",
 			"root",
 			"root",
 			adModeUnknown);
@@ -111,7 +111,7 @@ BOOL CAdoMySQLHelper::MySQL_Insert(OnRecord record){
 		// SQL语句
 		m_pCommand->CommandText = "insert into OnTable values(\'"
 			+ (_bstr_t)record.UID + "\',"
-			+ (_bstr_t)temp + "\',"
+			+ (_bstr_t)temp + ",\'"
 			+ (_bstr_t)record.StartTime + "\',"
 			+ (_bstr_t)isOverTime + ")";
 		// 执行SQL语句
@@ -269,13 +269,10 @@ void* CAdoMySQLHelper::MySQL_Query(CString cond, CString table){
 		return (void*)pRemainTime;
 }
 
-BOOL CAdoMySQLHelper::MySQL_QueryByUID(int uid, CString table){
-	// 字符串化UID
-	CString str_uid;
-	str_uid.Format(_T("%d"), uid);
+BOOL CAdoMySQLHelper::MySQL_QueryByUID(CString uid, CString table){
 	// 打开数据集SQL语句
 	_variant_t sql = "SELECT * FROM " + (_bstr_t)table
-				   + " WHERE UID=\'" + (_bstr_t)str_uid + "/'";
+				+ " WHERE UID=\'" + (_bstr_t)uid + "\'";
 	bool isExist = false;
 	try{
 		// 定义_RecordsetPtr智能指针
@@ -293,8 +290,21 @@ BOOL CAdoMySQLHelper::MySQL_QueryByUID(int uid, CString table){
 						   adCmdText);
 		// 确定表不为空
 		if (!m_pRecordset->ADOEOF){
-			// 由于UID是主键，表不为空即为存在
-			isExist = true;
+			// 移动游标到最前
+			m_pRecordset->MoveFirst();
+			// 循环遍历数据集
+			while (!m_pRecordset->ADOEOF) {
+				/********* Get UID ********/
+				_variant_t varUID = m_pRecordset->Fields->GetItem(_T("UID"))->GetValue();
+				varUID.ChangeType(VT_BSTR);
+				CString strUID = varUID.bstrVal;
+				// 查找匹配UID是否存在
+				if (strUID == uid) {
+					isExist = true;
+					break;
+				}
+				m_pRecordset->MoveNext();
+			}
 		}
 	}
 	catch (_com_error &e){

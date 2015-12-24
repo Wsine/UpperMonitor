@@ -3,6 +3,7 @@
 #include "AdoMySQLHelper.h"
 
 #define NOCARD _T("no card")
+#define TESTCARD _T("a486214b")
 
 // CAppdev ¶Ô»°¿ò
 

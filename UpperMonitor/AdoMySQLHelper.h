@@ -57,7 +57,7 @@ public:
 	// 对数据库进行查询操作, 查询条件cond = " UID='xxxx' "
 	void* MySQL_Query(CString cond, CString table);
 	// 对数据库进行查询操作, 查询UID是否存在表中
-	BOOL MySQL_QueryByUID(int uid, CString table);
+	BOOL MySQL_QueryByUID(CString uid, CString table);
 	// 定时扫描OnTable, 使用扫描周期Timer更新当前上机用户余时，捕捉超时用户
 	void MySQL_ScanOnTable(int timer);
 
