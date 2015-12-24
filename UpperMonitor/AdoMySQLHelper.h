@@ -1,5 +1,12 @@
 #pragma once
 
+#import "./libs/msado15.dll" no_namespace rename("EOF","ADOEOF") rename("BOF","ADOBOF")
+
+#define DEFAULTREMAINTIME 20
+#define ONTABLE _T("OnTable")
+#define REMAINTIMETABLE _T("RemainTimeTable")
+#define TIMEFORMAT _T("%Y/%m/%d %H:%M:%S")
+
 // RemainTimeTable
 struct RemainTime
 {
@@ -46,15 +53,15 @@ public:
 	// 对数据进行删除操作
 	BOOL MySQL_Delete(CString uid, CString table);
 	// 对数据库进行更新操作
-	BOOL MySQL_UpdateRemainTime(CString uid, int updateTime);
+	BOOL MySQL_UpdateRemainTime(CString uid, int updateTime, CString table);
 	// 对数据库进行查询操作, 查询条件cond = " UID='xxxx' "
 	void* MySQL_Query(CString cond, CString table);
 	// 对数据库进行查询操作, 查询UID是否存在表中
-	BOOL MySQL_QueryByUID(int uid, CString table);
+	BOOL MySQL_QueryByUID(CString uid, CString table);
 	// 定时扫描OnTable, 使用扫描周期Timer更新当前上机用户余时，捕捉超时用户
 	void MySQL_ScanOnTable(int timer);
 
 private:
 	// 保存打开的数据库连接智能指针
-	//_ConnectionPtr m_pConnection;
+	_ConnectionPtr m_pConnection;
 };
