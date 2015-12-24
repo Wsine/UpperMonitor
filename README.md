@@ -1,11 +1,12 @@
 # UpperMonitor
 Internet of Things Concept's Project
 
-<<<<<<< HEAD
+## Hint
+
 请只修改dev分支
 
 Master分支由Wsine来控制
-=======
+
 ## Usage
 
 ###0. Clone the repository
@@ -24,4 +25,4 @@ use `git branch` to verify if current branch is dev
 
 ###4. Review each other's work
 remember to switch branch on Github
->>>>>>> dev
+
