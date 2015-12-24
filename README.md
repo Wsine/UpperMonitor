@@ -7,8 +7,8 @@ Internet of Things Concept's Project
 `git clone git@github.com:Wsine/UpperMonitor.git`
 
 ###1. Check out to dev branch
-
 `git checkout dev`
+use `git branch` to verify if current branch is dev`
 
 ###2. Do some editting and commit it
 `git commit -m 'your commit'`

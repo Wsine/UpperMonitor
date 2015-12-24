@@ -2,7 +2,8 @@
 
 #include "AdoMySQLHelper.h"
 
-#define DEFAULTREMAINTIME 20
+#define NOCARD _T("no card")
+
 // CAppdev 对话框
 
 class CAppdev : public CDialogEx
@@ -24,6 +25,7 @@ private:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	CString GetCardUID();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -35,4 +37,7 @@ public:
 	afx_msg void OnBnClickedBtncomsurge2();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedBtnstartweb();
+	afx_msg void OnBnClickedBtnretimedefinit();
+	afx_msg void OnBnClickedBtnexitweb();
+	afx_msg void OnBnClickedBtncheckretime();
 };

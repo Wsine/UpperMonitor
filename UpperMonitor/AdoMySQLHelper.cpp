@@ -160,7 +160,7 @@ BOOL CAdoMySQLHelper::MySQL_Delete(CString uid, CString table){
 	return true;
 }
 
-BOOL CAdoMySQLHelper::MySQL_UpdateRemainTime(CString uid, int updateTime){
+BOOL CAdoMySQLHelper::MySQL_UpdateRemainTime(CString uid, int updateTime, CString table){
 	_CommandPtr m_pCommand;
 	try{
 		m_pCommand.CreateInstance("ADODB.Command");
@@ -176,9 +176,9 @@ BOOL CAdoMySQLHelper::MySQL_UpdateRemainTime(CString uid, int updateTime){
 		CString str_updateTime;
 		str_updateTime.Format(_T("%d"), updateTime);
 		// SQL语句
-		m_pCommand->CommandText = "update RemainTimeTable set RemainTime=" 
-			+ (_bstr_t)str_updateTime + " where UID=\'" 
-			+ (_bstr_t)uid + "\'";
+		m_pCommand->CommandText = "update " + (_bstr_t)table 
+			+ " set RemainTime=" + (_bstr_t)str_updateTime 
+			+ " where UID=\'" + (_bstr_t)uid + "\'";
 		// 执行SQL语句
 		m_pCommand->Execute(&vNULL, &vNULL, adCmdText);
 	}
@@ -197,9 +197,10 @@ BOOL CAdoMySQLHelper::MySQL_UpdateRemainTime(CString uid, int updateTime){
 
 void* CAdoMySQLHelper::MySQL_Query(CString cond, CString table){
 	// 打开数据集SQL语句
-	_variant_t sql = "SELECT * FROM " + (_bstr_t)table + "WHERE " + (_bstr_t)cond;
+	_variant_t sql = "SELECT * FROM " + (_bstr_t)table + " WHERE " + (_bstr_t)cond;
 	
-	int uid = -1;
+	OnRecord* pOnRecord = NULL;
+	RemainTime* pRemainTime = NULL;
 	try{
 		// 定义_RecordsetPtr智能指针
 		_RecordsetPtr m_pRecordset;
@@ -220,17 +221,41 @@ void* CAdoMySQLHelper::MySQL_Query(CString cond, CString table){
 			m_pRecordset->MoveFirst();
 			// 循环遍历数据集
 			while (!m_pRecordset->ADOEOF){
-				_variant_t varRemainTime = m_pRecordset->Fields->GetItem(_T("RemainTime"))->GetValue();
-				varRemainTime.ChangeType(VT_INT);
-				int varRemainTimeInt = varRemainTime.intVal;
-				// BUG: Let another get more seconds to live
-				if (varRemainTimeInt <= 0){
+				if (table == ONTABLE) {
+					/********* Get UID ********/
 					_variant_t varUID = m_pRecordset->Fields->GetItem(_T("UID"))->GetValue();
 					varUID.ChangeType(VT_BSTR);
 					CString strUID = varUID.bstrVal;
-					uid = _ttoi(strUID);
-					break;
+					/********* Get RemainSeconds ********/
+					_variant_t varRemainTime = m_pRecordset->Fields->GetItem(_T("RemainTime"))->GetValue();
+					varRemainTime.ChangeType(VT_INT);
+					int intRemainTime = varRemainTime.intVal;
+					/********** Get StartTime ******************/
+					_variant_t varStartTime = m_pRecordset->GetCollect(_T("StartTime"));
+					COleDateTime varDateTime = (COleDateTime)varStartTime;
+					CString strStartTime = varDateTime.Format(TIMEFORMAT);
+					/*********** Get isOverTime ***********/
+					_variant_t varIsOverTime = m_pRecordset->Fields->GetItem(_T("isOverTime"))->GetValue();
+					varIsOverTime.ChangeType(VT_BOOL);
+					bool boolIsOverTime = varIsOverTime.boolVal;
+					/************ Generate OnRecord ****************/
+					pOnRecord = new OnRecord(strUID, intRemainTime, strStartTime, boolIsOverTime);
 				}
+				else if(table == REMAINTIMETABLE) {
+					/********* Get UID ********/
+					_variant_t varUID = m_pRecordset->Fields->GetItem(_T("UID"))->GetValue();
+					varUID.ChangeType(VT_BSTR);
+					CString strUID = varUID.bstrVal;
+					/********* Get RemainSeconds ********/
+					_variant_t varRemainTime = m_pRecordset->Fields->GetItem(_T("RemainTime"))->GetValue();
+					varRemainTime.ChangeType(VT_INT);
+					int intRemainTime = varRemainTime.intVal;
+					/************ Generate RemainTime ****************/
+					pRemainTime = new RemainTime(strUID, intRemainTime);
+				}
+				
+				break; // Only Return one struct
+				// BUG: Let another get more seconds to live
 				m_pRecordset->MoveNext();
 			}
 		}
@@ -238,7 +263,10 @@ void* CAdoMySQLHelper::MySQL_Query(CString cond, CString table){
 	catch (_com_error &e){
 		AfxMessageBox(e.Description());
 	}
-	return (void*)uid;
+	if (table == ONTABLE)
+		return (void*)pOnRecord;
+	else
+		return (void*)pRemainTime;
 }
 
 BOOL CAdoMySQLHelper::MySQL_QueryByUID(int uid, CString table){

@@ -44,6 +44,9 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNCOMSURGE2, &CAppdev::OnBnClickedBtncomsurge2)
 	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(IDC_BTNSTARTWEB, &CAppdev::OnBnClickedBtnstartweb)
+	ON_BN_CLICKED(IDC_BTNRETIMEDEFINIT, &CAppdev::OnBnClickedBtnretimedefinit)
+	ON_BN_CLICKED(IDC_BTNEXITWEB, &CAppdev::OnBnClickedBtnexitweb)
+	ON_BN_CLICKED(IDC_BTNCHECKRETIME, &CAppdev::OnBnClickedBtncheckretime)
 END_MESSAGE_MAP()
 
 // 自定义函数
@@ -83,6 +86,25 @@ void CAppdev::HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* 
 	return;
 }
 
+CString CAppdev::GetCardUID() {
+	CString uid, temp;
+	unsigned char buff[1024];
+	int buff_len;
+
+	// 成功获取
+	if (find_14443(buff, &buff_len) == IFD_OK) {
+		uid.Empty();
+		for (int i = 0; i < buff_len; i++) {
+			// 将获得的UID数据（1 byte）转为16进制
+			temp.Format(_T("%02x"), buff[i]);
+			uid += temp;
+		}
+		return uid;
+	}
+	else {
+		return NOCARD;
+	}
+}
 
 // CAppdev 消息处理程序
 
@@ -235,30 +257,132 @@ HBRUSH CAppdev::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
 
 
 void CAppdev::OnBnClickedBtnstartweb() {
-	CString uid, temp;
-	unsigned char buff[1024];
-	int buff_len;
+	CString uid = GetCardUID();
 
 	// 成功获取
-	if (find_14443(buff, &buff_len) == IFD_OK) {
-		uid.Empty();
-		for (int i = 0; i < buff_len; i++) {
-			// 将获得的UID数据（1 byte）转为16进制
-			temp.Format(_T("%02x"), buff[i]);
-			uid += temp;
+	if (uid != NOCARD) {
+		// 当用户不在OnTable中，提示初始化
+		if (!adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), ONTABLE)) {
+			MessageBox(_T("请先初始化余时"));
 		}
-		// 插入一条新记录
-		CTime curTime = CTime::GetCurrentTime();
-		if (adoMySQLHelper.MySQL_Insert(OnRecord(uid, DEFAULTREMAINTIME, curTime.Format("%Y/%m/%d %H:%M:%S")))
-			&& adoMySQLHelper.MySQL_Insert(RemainTime(uid, DEFAULTREMAINTIME))){
-			// 更新状态栏成功
-			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("上机成功"));
-		}
+		// 当用户存在OnTable中
 		else {
-			adoMySQLHelper.MySQL_Delete(uid, _T("OnTable"));
-			adoMySQLHelper.MySQL_Delete(uid, _T("RemainTimeTable"));
-			// 更新状态栏成功
-			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("插入新记录失败"));
+			// 当用户存在RemainTimeTable中，什么也不做
+			if (!adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), REMAINTIMETABLE)){
+				// 更新状态栏，失败
+				((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("正在上机中"));
+			}
+			// 当用户不存在RemainTimeTable中，从OnTable中读取并写入到RemainTimeTable
+			else{
+				CString cond = _T("UID='") + uid + _T("'");
+				OnRecord* pRecord = (OnRecord*)adoMySQLHelper.MySQL_Query(cond, ONTABLE);
+				// 当用户已经超时
+				if (!pRecord->isOvertime) {
+					// 更新状态栏，失败
+					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("已超时，请先充值"));
+				}
+				// 用户没有超时
+				else {
+					adoMySQLHelper.MySQL_Insert(RemainTime(pRecord->UID, pRecord->RemainSeconds));
+					// 更新状态栏，成功
+					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("开始上机成功"));
+				}
+				delete(pRecord); // Important!
+			}
+		}
+	}
+	else {
+		// 更新状态栏，失败
+		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+	}
+}
+
+
+void CAppdev::OnBnClickedBtnretimedefinit() {
+	CString uid = GetCardUID();
+
+	// 成功获取
+	if (uid != NOCARD) {
+		// 当用户不在OnTable中，插入新记录
+		if (!adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), ONTABLE)) {
+			CTime curTime = CTime::GetCurrentTime();
+			adoMySQLHelper.MySQL_Insert(OnRecord(uid, DEFAULTREMAINTIME, curTime.Format(TIMEFORMAT)));
+			// 更新状态栏，成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("初始化余时成功"));
+		}
+		// 当用户存在OnTable中，更新OnTable
+		else {
+			adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, ONTABLE);
+			// 如果用户正在上机，一并更新RemainTimeTable
+			if (adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), REMAINTIMETABLE)) {
+				adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, REMAINTIMETABLE);
+			}
+			// 更新状态栏，成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("重设余时成功"));
+		}
+	}
+	else {
+		// 更新状态栏，失败
+		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+	}
+}
+
+
+void CAppdev::OnBnClickedBtnexitweb() {
+	CString uid = GetCardUID();
+
+	// 成功获取
+	if (uid != NOCARD) {
+		// 用户没有在上机
+		if (!adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), REMAINTIMETABLE)) {
+			// 更新状态栏，失败
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机，无法退出"));
+		}
+		// 用户正在上机
+		else {
+			CString cond = _T("UID='") + uid + _T("'");
+			RemainTime* pRemainTime = (RemainTime*)adoMySQLHelper.MySQL_Query(cond, REMAINTIMETABLE);
+			adoMySQLHelper.MySQL_Delete(uid, REMAINTIMETABLE); // 删除RemainTimeTable记录，退出上机
+			adoMySQLHelper.MySQL_UpdateRemainTime(uid, pRemainTime->RemainSeconds, ONTABLE); // 更新OnTable
+			// 更新状态栏，成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("成功退出上机"));
+			delete(pRemainTime); // important!
+		}
+	}
+	else {
+		// 更新状态栏，失败
+		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+	}
+}
+
+
+void CAppdev::OnBnClickedBtncheckretime() {
+	CString uid = GetCardUID();
+
+	// 成功获取
+	if (uid != NOCARD) {
+		// 用户没有在上机
+		if (!adoMySQLHelper.MySQL_QueryByUID(_ttoi(uid), REMAINTIMETABLE)) {
+			// 更新状态栏，失败
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机"));
+		}
+		// 用户正在上机
+		else {
+			CString cond = _T("UID='") + uid + _T("'");
+			RemainTime* pRemainTime = (RemainTime*)adoMySQLHelper.MySQL_Query(cond, REMAINTIMETABLE);
+			CString remainHours;
+			remainHours.Format(_T("%d"), pRemainTime->RemainSeconds % 3600);
+			CString remainMinutes;
+			remainMinutes.Format(_T("%d"), (pRemainTime->RemainSeconds / 3600) % 60);
+			CString remainSeconds;
+			remainSeconds.Format(_T("%d"), (pRemainTime->RemainSeconds / 3600 / 60) % 60);
+			// 更新UI
+			((CEdit*)GetDlgItem(IDC_EDITREHOUR))->SetWindowTextW(remainHours);
+			((CEdit*)GetDlgItem(IDC_EDITREMINUTE))->SetWindowTextW(remainMinutes);
+			((CEdit*)GetDlgItem(IDC_EDITRESECOND))->SetWindowTextW(remainSeconds);
+			// 更新状态栏，成功
+			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("查询余时成功"));
+			delete(pRemainTime); // important!
 		}
 	}
 	else {
