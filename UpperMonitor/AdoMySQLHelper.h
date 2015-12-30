@@ -54,6 +54,8 @@ public:
 	BOOL MySQL_Delete(CString uid, CString table);
 	// 对数据库进行更新操作
 	BOOL MySQL_UpdateRemainTime(CString uid, int updateTime, CString table);
+	// 对数据库执行sql语句
+	BOOL MySQL_ExecuteSQL(CString sql);
 	// 对数据库进行查询操作, 查询条件cond = " UID='xxxx' "
 	void* MySQL_Query(CString cond, CString table);
 	// 对数据库进行查询操作, 查询UID是否存在表中

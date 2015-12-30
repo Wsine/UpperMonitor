@@ -5,6 +5,9 @@
 #define NOCARD _T("no card")
 #define TESTCARD _T("a486214b")
 
+#define SCANTIMER 1
+#define SCANTIMER_ID 1
+
 // CAppdev 对话框
 
 class CAppdev : public CDialogEx
@@ -23,6 +26,7 @@ private:
 	bool canIOWeb;
 	CFont m_font2;
 	CAdoMySQLHelper adoMySQLHelper;
+	UINT_PTR m_ActiveTimer;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
@@ -41,4 +45,6 @@ public:
 	afx_msg void OnBnClickedBtnretimedefinit();
 	afx_msg void OnBnClickedBtnexitweb();
 	afx_msg void OnBnClickedBtncheckretime();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	virtual BOOL DestroyWindow();
 };
