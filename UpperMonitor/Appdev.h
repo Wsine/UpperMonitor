@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AdoMySQLHelper.h"
+#include "RecordHelper.h"
 
 #define NOCARD _T("no card")
 #define TESTCARD _T("a486214b")
@@ -26,6 +27,7 @@ private:
 	bool canIOWeb;
 	CFont m_font2;
 	CAdoMySQLHelper adoMySQLHelper;
+	CRecordHelper fileRecordHelper;
 	UINT_PTR m_ActiveTimer;
 
 protected:
@@ -47,4 +49,6 @@ public:
 	afx_msg void OnBnClickedBtncheckretime();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	virtual BOOL DestroyWindow();
+	afx_msg void OnBnClickedBtnloadhis();
+	afx_msg void OnBnClickedBtnclearhis();
 };

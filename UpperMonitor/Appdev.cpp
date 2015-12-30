@@ -51,6 +51,8 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNEXITWEB, &CAppdev::OnBnClickedBtnexitweb)
 	ON_BN_CLICKED(IDC_BTNCHECKRETIME, &CAppdev::OnBnClickedBtncheckretime)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BTNLOADHIS, &CAppdev::OnBnClickedBtnloadhis)
+	ON_BN_CLICKED(IDC_BTNCLEARHIS, &CAppdev::OnBnClickedBtnclearhis)
 END_MESSAGE_MAP()
 
 // 自定义函数
@@ -396,6 +398,16 @@ void CAppdev::OnBnClickedBtncheckretime() {
 	}
 }
 
+void CAppdev::OnBnClickedBtnloadhis(){
+	((CEdit*)GetDlgItem(IDC_EDITHISTORY))->SetWindowTextW(fileRecordHelper.LoadRecords());
+}
+
+
+void CAppdev::OnBnClickedBtnclearhis(){
+	if (fileRecordHelper.EmptyRecords()) {
+		((CEdit*)GetDlgItem(IDC_EDITHISTORY))->SetWindowTextW(_T(""));
+	}
+}
 
 void CAppdev::OnTimer(UINT_PTR nIDEvent){
 	// 在此添加消息处理程序代码和/或调用默认值
@@ -411,8 +423,7 @@ void CAppdev::OnTimer(UINT_PTR nIDEvent){
 }
 
 
-BOOL CAppdev::DestroyWindow()
-{
+BOOL CAppdev::DestroyWindow(){
 	// 销毁定时器
 	KillTimer(m_ActiveTimer);
 	return CDialogEx::DestroyWindow();
