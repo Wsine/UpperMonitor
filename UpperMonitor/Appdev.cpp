@@ -25,6 +25,7 @@ CAppdev::CAppdev(CWnd* pParent /*=NULL*/)
 
 CAppdev::~CAppdev()
 {
+	// 销毁自定义字体
 	DeleteObject(m_font2);
 }
 
@@ -34,6 +35,8 @@ void CAppdev::DoDataExchange(CDataExchange* pDX)
 	GetDlgItem(IDC_STELTPURSE)->SetFont(&m_font2);
 	GetDlgItem(IDC_STWEBMASTER)->SetFont(&m_font2);
 	GetDlgItem(IDC_STHISTORY)->SetFont(&m_font2);
+	// 启动定时器
+	m_ActiveTimer = SetTimer(SCANTIMER_ID, SCANTIMER * 1000, NULL);
 }
 
 
@@ -47,6 +50,7 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNRETIMEDEFINIT, &CAppdev::OnBnClickedBtnretimedefinit)
 	ON_BN_CLICKED(IDC_BTNEXITWEB, &CAppdev::OnBnClickedBtnexitweb)
 	ON_BN_CLICKED(IDC_BTNCHECKRETIME, &CAppdev::OnBnClickedBtncheckretime)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // 自定义函数
@@ -102,8 +106,8 @@ CString CAppdev::GetCardUID() {
 		return uid;
 	}
 	else {
-		return NOCARD;
-		//return TESTCARD;
+		//return NOCARD;
+		return TESTCARD;
 	}
 }
 
@@ -390,4 +394,26 @@ void CAppdev::OnBnClickedBtncheckretime() {
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
 	}
+}
+
+
+void CAppdev::OnTimer(UINT_PTR nIDEvent){
+	// 在此添加消息处理程序代码和/或调用默认值
+	switch (nIDEvent){
+		case SCANTIMER_ID:
+			adoMySQLHelper.MySQL_ScanOnTable(SCANTIMER);
+			break;
+		default:
+			break;
+	}
+
+	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+BOOL CAppdev::DestroyWindow()
+{
+	// 销毁定时器
+	KillTimer(m_ActiveTimer);
+	return CDialogEx::DestroyWindow();
 }
