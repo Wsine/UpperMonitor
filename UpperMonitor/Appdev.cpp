@@ -51,6 +51,8 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNEXITWEB, &CAppdev::OnBnClickedBtnexitweb)
 	ON_BN_CLICKED(IDC_BTNCHECKRETIME, &CAppdev::OnBnClickedBtncheckretime)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BTNLOADHIS, &CAppdev::OnBnClickedBtnloadhis)
+	ON_BN_CLICKED(IDC_BTNCLEARHIS, &CAppdev::OnBnClickedBtnclearhis)
 END_MESSAGE_MAP()
 
 // 自定义函数
@@ -181,6 +183,8 @@ void CAppdev::OnBnClickedBtnrecharge() {
 		MessageBox(_T("请输入正确的充值金额！"));
 		return;
 	}
+	CString balance;
+	((CEdit*)GetDlgItem(IDC_EDITELEBALAN))->GetWindowTextW(balance);
 	long account = _ttol(addAccount);
 	int sectionNum = 15;
 	int blockNum = 0;
@@ -190,16 +194,22 @@ void CAppdev::OnBnClickedBtnrecharge() {
 	// 密钥转换
 	CString pwd = _T("FFFFFFFFFFFF");
 	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	// 获取卡号
+	CString uid = GetCardUID();
 	// 充值函数
 	if(add_account(sectionNum, blockNum, pswtype, chpwd, account) == IFD_OK) {
 		OnBnClickedBtncheckbalance();
 		canIOPurse = true;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("充值成功"));
+		fileRecordHelper.SaveRecharges(uid, addAccount, account + _ttol(balance), _T("成功"));
 	}
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("充值失败"));
+		fileRecordHelper.SaveRecharges(uid, addAccount, _ttol(balance), _T("失败"));
 	}
+	// 更新历史记录显示
+	OnBnClickedBtnloadhis();
 }
 
 
@@ -227,16 +237,22 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 	// 密钥类型转换
 	CString pwd = _T("FFFFFFFFFFFF");
 	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	// 获取卡号
+	CString uid = GetCardUID();
 	// 消费函数
 	if(sub_account(sectionNum, blockNum, pswtype, chpwd, account) == IFD_OK) {
 		OnBnClickedBtncheckbalance();
 		canIOPurse = true;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("消费成功"));
+		fileRecordHelper.SaveConsumptions(uid, subAccount, _ttol(balance) - account, _T("成功"));
 	}
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("消费失败"));
+		fileRecordHelper.SaveConsumptions(uid, subAccount, _ttol(balance), _T("失败"));
 	}
+	// 更新历史记录显示
+	OnBnClickedBtnloadhis();
 }
 
 
@@ -285,13 +301,17 @@ void CAppdev::OnBnClickedBtnstartweb() {
 				if (pRecord->isOvertime) {
 					// 更新状态栏，失败
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("已超时，请先充值"));
+					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("失败"));
 				}
 				// 用户没有超时
 				else {
 					adoMySQLHelper.MySQL_Insert(RemainTime(pRecord->UID, pRecord->RemainSeconds));
 					// 更新状态栏，成功
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("开始上机成功"));
+					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("成功"));
 				}
+				// 更新历史记录显示
+				OnBnClickedBtnloadhis();
 				delete(pRecord); // Important!
 			}
 		}
@@ -351,6 +371,9 @@ void CAppdev::OnBnClickedBtnexitweb() {
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, pRemainTime->RemainSeconds, ONTABLE); // 更新OnTable
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("成功退出上机"));
+			fileRecordHelper.ExitNets(uid, pRemainTime->RemainSeconds, DEFAULTREMAINTIME, _T("成功")); // TODO: Fix OverTime
+			// 更新历史记录显示
+			OnBnClickedBtnloadhis();
 			delete(pRemainTime); // important!
 		}
 	}
@@ -396,6 +419,16 @@ void CAppdev::OnBnClickedBtncheckretime() {
 	}
 }
 
+void CAppdev::OnBnClickedBtnloadhis(){
+	((CEdit*)GetDlgItem(IDC_EDITHISTORY))->SetWindowTextW(fileRecordHelper.LoadRecords());
+}
+
+
+void CAppdev::OnBnClickedBtnclearhis(){
+	if (fileRecordHelper.EmptyRecords()) {
+		((CEdit*)GetDlgItem(IDC_EDITHISTORY))->SetWindowTextW(_T(""));
+	}
+}
 
 void CAppdev::OnTimer(UINT_PTR nIDEvent){
 	// 在此添加消息处理程序代码和/或调用默认值
@@ -411,8 +444,7 @@ void CAppdev::OnTimer(UINT_PTR nIDEvent){
 }
 
 
-BOOL CAppdev::DestroyWindow()
-{
+BOOL CAppdev::DestroyWindow(){
 	// 销毁定时器
 	KillTimer(m_ActiveTimer);
 	return CDialogEx::DestroyWindow();

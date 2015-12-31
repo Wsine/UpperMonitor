@@ -279,3 +279,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# =========================
+# Add by myself
+records.txt
+# =========================
