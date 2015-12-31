@@ -208,6 +208,8 @@ void CAppdev::OnBnClickedBtnrecharge() {
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("充值失败"));
 		fileRecordHelper.SaveRecharges(uid, addAccount, _ttol(balance), _T("失败"));
 	}
+	// 更新历史记录显示
+	OnBnClickedBtnloadhis();
 }
 
 
@@ -249,6 +251,8 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("消费失败"));
 		fileRecordHelper.SaveConsumptions(uid, subAccount, _ttol(balance), _T("失败"));
 	}
+	// 更新历史记录显示
+	OnBnClickedBtnloadhis();
 }
 
 
@@ -306,6 +310,8 @@ void CAppdev::OnBnClickedBtnstartweb() {
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("开始上机成功"));
 					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("成功"));
 				}
+				// 更新历史记录显示
+				OnBnClickedBtnloadhis();
 				delete(pRecord); // Important!
 			}
 		}
@@ -366,6 +372,8 @@ void CAppdev::OnBnClickedBtnexitweb() {
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("成功退出上机"));
 			fileRecordHelper.ExitNets(uid, pRemainTime->RemainSeconds, DEFAULTREMAINTIME, _T("成功")); // TODO: Fix OverTime
+			// 更新历史记录显示
+			OnBnClickedBtnloadhis();
 			delete(pRemainTime); // important!
 		}
 	}
