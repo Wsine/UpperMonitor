@@ -188,6 +188,12 @@ BOOL CAdoMySQLHelper::MySQL_UpdateRemainTime(CString uid, int updateTime, CStrin
 				+ " where UID=\'" + (_bstr_t)uid + "\'";
 			m_pCommand->Execute(&vNULL, &vNULL, adCmdText);
 		}
+		else {
+			m_pCommand->CommandText = "update " + (_bstr_t)table
+				+ " set isOvertime=false"
+				+ " where UID=\'" + (_bstr_t)uid + "\'";
+			m_pCommand->Execute(&vNULL, &vNULL, adCmdText);
+		}
 	}
 	catch (_com_error &e){
 		// 需要在异常处理中释放命令对象
