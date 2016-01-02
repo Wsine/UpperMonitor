@@ -31,4 +31,4 @@ Internet of Things Concept's Project
 	- [x] 自动添加记录
 	- [x] 清空记录
 	- [x] 加载记录
-- [ ] 蜂鸣器 
+- [x] 蜂鸣器 

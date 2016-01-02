@@ -5,6 +5,7 @@
 #include "UpperMonitor.h"
 #include "Appdev.h"
 #include "afxdialogex.h"
+#include "Utils.h"
 
 #pragma comment(lib, "./libs/ZM124U.lib")
 #include "./libs/ZM124U.h"
@@ -146,6 +147,8 @@ void CAppdev::OnBnClickedBtnpurseinit() {
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("初始化钱包失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -171,6 +174,8 @@ void CAppdev::OnBnClickedBtncheckbalance() {
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("查询钱包失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -207,6 +212,8 @@ void CAppdev::OnBnClickedBtnrecharge() {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("充值失败"));
 		fileRecordHelper.SaveRecharges(uid, addAccount, _ttol(balance), _T("失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	// 更新历史记录显示
 	OnBnClickedBtnloadhis();
@@ -250,6 +257,8 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("消费失败"));
 		fileRecordHelper.SaveConsumptions(uid, subAccount, _ttol(balance), _T("失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	// 更新历史记录显示
 	OnBnClickedBtnloadhis();
@@ -319,6 +328,8 @@ void CAppdev::OnBnClickedBtnstartweb() {
 	else {
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -349,6 +360,8 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 	else {
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -380,6 +393,8 @@ void CAppdev::OnBnClickedBtnexitweb() {
 	else {
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -416,6 +431,8 @@ void CAppdev::OnBnClickedBtncheckretime() {
 	else {
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 

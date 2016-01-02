@@ -6,6 +6,7 @@
 #include "Debugger.h"
 #include "afxdialogex.h"
 #include "atlrx.h"
+#include "Utils.h"
 
 #pragma comment(lib, "./libs/ZM124U.lib")
 #include "./libs/ZM124U.h"
@@ -123,6 +124,8 @@ void CDebugger::OnBnClickedBtncardget() {
 		// 更新状态栏，失败
 		canGetCardInfo = false;
 		((CEdit*)GetDlgItem(IDC_EDITCARDSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -137,6 +140,8 @@ void CDebugger::OnBnClickedBtnopendevice() {
 		// 更新状态栏，失败
 		isDeviceOpen = false;
 		((CEdit*)GetDlgItem(IDC_EDITSTATUS))->SetWindowTextW(_T("开启设备失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -154,6 +159,8 @@ void CDebugger::OnBnClickedBtncardcheck() {
 		// 更新状态栏，失败
 		canGetCardInfo = false;
 		((CEdit*)GetDlgItem(IDC_EDITVERSIONINFO))->SetWindowTextW(_T("查看失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -210,6 +217,8 @@ void CDebugger::OnBnClickedBtnledset() {
 		// 更新状态栏，失败
 		canSetLED = false;
 		((CEdit*)GetDlgItem(IDC_EDITLEDSTATUS))->SetWindowTextW(_T("设置失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -321,6 +330,8 @@ void CDebugger::OnBnClickedBtnreadblock() {
 			break;
 		}
 		((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("读取块异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -416,6 +427,8 @@ void CDebugger::OnBnClickedBtnwriteblock() {
 	else {
 		canIO = false;
 		((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("写入块失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	
 }
@@ -497,6 +510,8 @@ void CDebugger::OnBnClickedBtnreadsection() {
 			((CEdit*)GetDlgItem(IDC_EDITBL3DATA1))->SetWindowTextW(_T(""));
 			((CEdit*)GetDlgItem(IDC_EDITBL3DATA2))->SetWindowTextW(_T(""));
 			((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("读取扇区异常"));
+			// 蜂鸣器提示失败
+			CUtils::buzzerFailed();
 		}
 	}
 	return;
