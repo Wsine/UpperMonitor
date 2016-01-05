@@ -276,6 +276,12 @@ HBRUSH CAppdev::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
 			else
 				pDC->SetTextColor(RED);
 			break;
+		case IDC_EDITWEBSTATUS:
+			if (this->canIOWeb)
+				pDC->SetTextColor(BLUE);
+			else
+				pDC->SetTextColor(RED);
+			break;
 		default:
 			pDC->SetTextColor(BLACK);
 			break;
@@ -299,6 +305,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 		else {
 			// 当用户存在RemainTimeTable中，什么也不做
 			if (adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)){
+				this->canIOWeb = false;
 				// 更新状态栏，失败
 				((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("正在上机中"));
 			}
@@ -308,6 +315,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 				OnRecord* pRecord = (OnRecord*)adoMySQLHelper.MySQL_Query(cond, ONTABLE);
 				// 当用户已经超时
 				if (pRecord->isOvertime) {
+					this->canIOWeb = false;
 					// 更新状态栏，失败
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("已超时，请先充值"));
 					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("失败"));
@@ -315,6 +323,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 				// 用户没有超时
 				else {
 					adoMySQLHelper.MySQL_Insert(RemainTime(pRecord->UID, pRecord->RemainSeconds));
+					this->canIOWeb = true;
 					// 更新状态栏，成功
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("开始上机成功"));
 					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("成功"));
@@ -326,6 +335,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
 		// 蜂鸣器提示失败
@@ -343,6 +353,7 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, ONTABLE)) {
 			CTime curTime = CTime::GetCurrentTime();
 			adoMySQLHelper.MySQL_Insert(OnRecord(uid, DEFAULTREMAINTIME, curTime.Format(TIMEFORMAT)));
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("初始化余时成功"));
 		}
@@ -353,11 +364,13 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 			if (adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
 				adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, REMAINTIMETABLE);
 			}
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("重设余时成功"));
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
 		// 蜂鸣器提示失败
@@ -373,6 +386,7 @@ void CAppdev::OnBnClickedBtnexitweb() {
 	if (uid != NOCARD) {
 		// 用户没有在上机
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+			this->canIOWeb = false;
 			// 更新状态栏，失败
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机，无法退出"));
 		}
@@ -382,6 +396,7 @@ void CAppdev::OnBnClickedBtnexitweb() {
 			RemainTime* pRemainTime = (RemainTime*)adoMySQLHelper.MySQL_Query(cond, REMAINTIMETABLE);
 			adoMySQLHelper.MySQL_Delete(uid, REMAINTIMETABLE); // 删除RemainTimeTable记录，退出上机
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, pRemainTime->RemainSeconds, ONTABLE); // 更新OnTable
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("成功退出上机"));
 			fileRecordHelper.ExitNets(uid, pRemainTime->RemainSeconds, DEFAULTREMAINTIME, _T("成功")); // TODO: Fix OverTime
@@ -391,6 +406,7 @@ void CAppdev::OnBnClickedBtnexitweb() {
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
 		// 蜂鸣器提示失败
@@ -406,6 +422,7 @@ void CAppdev::OnBnClickedBtncheckretime() {
 	if (uid != NOCARD) {
 		// 用户没有在上机
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+			this->canIOWeb = false;
 			// 更新状态栏，失败
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机"));
 		}
@@ -423,12 +440,14 @@ void CAppdev::OnBnClickedBtncheckretime() {
 			((CEdit*)GetDlgItem(IDC_EDITREHOUR))->SetWindowTextW(remainHours);
 			((CEdit*)GetDlgItem(IDC_EDITREMINUTE))->SetWindowTextW(remainMinutes);
 			((CEdit*)GetDlgItem(IDC_EDITRESECOND))->SetWindowTextW(remainSeconds);
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("查询余时成功"));
 			delete(pRemainTime); // important!
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
 		// 蜂鸣器提示失败

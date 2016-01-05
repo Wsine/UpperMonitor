@@ -377,8 +377,8 @@ void CAdoMySQLHelper::MySQL_ScanOnTable(int timer) {
 			// 提示用户
 			CString message;
 			message.Format(_T("亲爱的%s, 您已超时，请及时充值"), pRemainTime->UID);
-			AfxMessageBox(message);
 			delete(pRemainTime); // Important!
+			AfxMessageBox(message);
 		}
 	}
 	else {
