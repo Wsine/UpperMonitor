@@ -29,6 +29,7 @@ private:
 	CAdoMySQLHelper adoMySQLHelper;
 	CRecordHelper fileRecordHelper;
 	UINT_PTR m_ActiveTimer;
+	bool isWritingRemainTimeTable;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö

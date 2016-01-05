@@ -32,3 +32,4 @@ Internet of Things Concept's Project
 	- [x] 清空记录
 	- [x] 加载记录
 - [x] 蜂鸣器 
+- [x] LED工具 

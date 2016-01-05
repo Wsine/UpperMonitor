@@ -22,6 +22,7 @@ CAppdev::CAppdev(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CAppdev::IDD, pParent)
 {
 	m_font2.CreatePointFont(110, _T("华文新魏"));
+	this->isWritingRemainTimeTable = false;
 }
 
 CAppdev::~CAppdev()
@@ -362,6 +363,7 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, ONTABLE);
 			// 如果用户正在上机，一并更新RemainTimeTable
 			if (adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+				while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 				adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, REMAINTIMETABLE);
 			}
 			this->canIOWeb = true;
@@ -393,6 +395,7 @@ void CAppdev::OnBnClickedBtnexitweb() {
 		// 用户正在上机
 		else {
 			CString cond = _T("UID=\'") + uid + _T("\'");
+			while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 			RemainTime* pRemainTime = (RemainTime*)adoMySQLHelper.MySQL_Query(cond, REMAINTIMETABLE);
 			adoMySQLHelper.MySQL_Delete(uid, REMAINTIMETABLE); // 删除RemainTimeTable记录，退出上机
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, pRemainTime->RemainSeconds, ONTABLE); // 更新OnTable
@@ -470,7 +473,9 @@ void CAppdev::OnTimer(UINT_PTR nIDEvent){
 	// 在此添加消息处理程序代码和/或调用默认值
 	switch (nIDEvent){
 		case SCANTIMER_ID:
+			this->isWritingRemainTimeTable = true;
 			adoMySQLHelper.MySQL_ScanOnTable(SCANTIMER);
+			this->isWritingRemainTimeTable = false;
 			break;
 		default:
 			break;
