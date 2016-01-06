@@ -1,28 +1,45 @@
 # UpperMonitor
 Internet of Things Concept's Project
 
-## Hint
+## 软件说明
 
-请只修改dev分支
+运行平台：Windows
+运行架构：x86
+数据库：MySQL
 
-Master分支由Wsine来控制
+## 软件功能
 
-## Usage
+- [x] 界面UI编写
+- [x] 开启设备
+	- [x] 开启设备
+- [x] 获取卡片信息
+	- [x] 查看
+	- [x] 获取
+- [x] LED设置
+	- [x] 设置
+- [x] 读写操作
+	- [x] 默认密钥
+	- [x] 读扇区
+	- [x] 读块
+	- [x] 写块
+- [x] 电子钱包
+	- [x] 钱包初始化
+	- [x] 查询余额
+	- [x] 充值
+	- [x] 消费
+- [x] 上机网管
+	- [x] 编写数据库辅助类
+	- [x] 开始上机
+	- [x] 用户退出
+	- [x] 余时初始化
+	- [x] 查询余时
+- [x] 历史操作记录
+	- [x] 自动添加记录
+	- [x] 清空记录
+	- [x] 加载记录
+- [x] 蜂鸣器 
+- [x] LED工具 
 
-###0. Clone the repository
-`git clone git@github.com:Wsine/UpperMonitor.git`
+## 注意
 
-###1. Check out to dev branch
-`git checkout dev`
-
-use `git branch` to verify if current branch is dev
-
-###2. Do some editting and commit it
-`git commit -m 'your commit'`
-
-###3. Push to remote branch
-`git push --set-upstream origin dev`
-
-###4. Review each other's work
-remember to switch branch on Github
-
+AdoMySQLHelper类中的MySQL_Connect函数中声明的参数需要和运行环境配置的Ado一致

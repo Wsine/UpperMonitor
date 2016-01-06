@@ -423,6 +423,7 @@ void CAppdev::OnBnClickedBtncheckretime() {
 
 	// 成功获取
 	if (uid != NOCARD) {
+		while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 		// 用户没有在上机
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
 			this->canIOWeb = false;
