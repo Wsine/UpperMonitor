@@ -47,11 +47,13 @@ void CUtils::HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* a
 BOOL CUtils::buzzerFailed() {
 	// 设置蜂鸣器的蜂鸣方式
 	if (buzzer_setting('1000', '200', 10, 0) == IFD_OK) {
+		buzzer_setting('100', '20', 1, 0);
 		return true;
 	}
 	else {
 		return false;
 	}
+	return false;
 }
 
 BOOL CUtils::LEDSet(long num) {

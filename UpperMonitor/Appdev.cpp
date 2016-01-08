@@ -57,43 +57,6 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNCLEARHIS, &CAppdev::OnBnClickedBtnclearhis)
 END_MESSAGE_MAP()
 
-// 自定义函数
-void CAppdev::CString2CharStar(const CString& s, char* ch, int len) {
-	int i;
-	for(i = 0; i < len; i++) {
-		ch[i] = s[i];
-	}
-	ch[i] = '\0';
-	return;
-}
-
-void CAppdev::HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* asc, int* asc_len) {
-	*asc_len = 0;
-	int len = hexStr.GetLength();
-
-	char temp[200];
-	char tmp[3] = { 0 };
-	char* Hex;
-	unsigned char* p;
-
-	CString2CharStar(hexStr, temp, len);
-	Hex = temp;
-	p = asc;
-
-	while(*Hex != '\0') {
-		tmp[0] = *Hex;
-		Hex++;
-		tmp[1] = *Hex;
-		Hex++;
-		tmp[2] = '\0';
-		*p = (unsigned char)strtol(tmp, NULL, 16);
-		p++;
-		(*asc_len)++;
-	}
-	*p = '\0';
-	return;
-}
-
 CString CAppdev::GetCardUID() {
 	CString uid, temp;
 	unsigned char buff[1024];
@@ -110,8 +73,8 @@ CString CAppdev::GetCardUID() {
 		return uid;
 	}
 	else {
-		//return NOCARD;
-		return TESTCARD;
+		return NOCARD;
+		//return TESTCARD;
 	}
 }
 
@@ -139,7 +102,7 @@ void CAppdev::OnBnClickedBtnpurseinit() {
 	int len_chpwd = 0;
 	// 密钥类型转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 初始化钱包
 	if(write_account(sectionNum, blockNum, pswtype, chpwd, account) == IFD_OK) {
 		canIOPurse = true;
@@ -164,12 +127,13 @@ void CAppdev::OnBnClickedBtncheckbalance() {
 	int len_chpwd = 0;
 	// 密钥转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 读取钱包
 	if(read_account(sectionNum, blockNum, pswtype, chpwd, &account) == IFD_OK) {
 		balance.Format(_T("%d"), account);
 		((CEdit*)GetDlgItem(IDC_EDITELEBALAN))->SetWindowTextW(balance);
 		canIOPurse = true;
+		CUtils::LEDSet(account); // MayBe Wrong
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("查询钱包成功"));
 	}
 	else {
@@ -199,7 +163,7 @@ void CAppdev::OnBnClickedBtnrecharge() {
 	int len_chpwd = 0;
 	// 密钥转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取卡号
 	CString uid = GetCardUID();
 	// 充值函数
@@ -244,7 +208,7 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 	int len_chpwd = 0;
 	// 密钥类型转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取卡号
 	CString uid = GetCardUID();
 	// 消费函数
