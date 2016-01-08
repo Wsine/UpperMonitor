@@ -38,8 +38,6 @@ public:
 	afx_msg void OnBnClickedRaotypeb();
 	afx_msg void OnBnClickedBtnreadblock();
 	afx_msg void OnBnClickedBtnwriteblock();
-	void CString2CharStar(const CString& s, char* ch, int len);
-	void HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* asc, int* asc_len);
 	afx_msg void OnBnClickedBtnreadsection();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

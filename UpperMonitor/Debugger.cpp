@@ -6,6 +6,7 @@
 #include "Debugger.h"
 #include "afxdialogex.h"
 #include "atlrx.h"
+#include "Utils.h"
 
 #pragma comment(lib, "./libs/ZM124U.lib")
 #include "./libs/ZM124U.h"
@@ -58,45 +59,7 @@ BEGIN_MESSAGE_MAP(CDebugger, CDialogEx)
 	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
-// 自定义函数
-void CDebugger::CString2CharStar(const CString& s, char* ch, int len) {
-	int i;
-	for(i = 0; i < len; i++) {
-		ch[i] = s[i];
-	}
-	ch[i] = '\0';
-	return;
-}
-
-void CDebugger::HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* asc, int* asc_len) {
-	*asc_len = 0;
-	int len = hexStr.GetLength();
-	
-	char temp[200];
-	char tmp[3] = { 0 };
-	char* Hex;
-	unsigned char* p;
-
-	CString2CharStar(hexStr, temp, len);
-	Hex = temp;
-	p = asc;
-	
-	while(*Hex != '\0') {
-		tmp[0] = *Hex;
-		Hex++;
-		tmp[1] = *Hex;
-		Hex++;
-		tmp[2] = '\0';
-		*p = (unsigned char)strtol(tmp, NULL, 16);
-		p++;
-		(*asc_len)++;
-	}
-	*p = '\0';
-	return;
-}
-
 // CDebugger 消息处理程序
-
 
 void CDebugger::OnBnClickedBtncardget() {
 	CString uid, temp;
@@ -123,6 +86,8 @@ void CDebugger::OnBnClickedBtncardget() {
 		// 更新状态栏，失败
 		canGetCardInfo = false;
 		((CEdit*)GetDlgItem(IDC_EDITCARDSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -137,6 +102,8 @@ void CDebugger::OnBnClickedBtnopendevice() {
 		// 更新状态栏，失败
 		isDeviceOpen = false;
 		((CEdit*)GetDlgItem(IDC_EDITSTATUS))->SetWindowTextW(_T("开启设备失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -154,6 +121,8 @@ void CDebugger::OnBnClickedBtncardcheck() {
 		// 更新状态栏，失败
 		canGetCardInfo = false;
 		((CEdit*)GetDlgItem(IDC_EDITVERSIONINFO))->SetWindowTextW(_T("查看失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -200,7 +169,7 @@ void CDebugger::OnBnClickedBtnledset() {
 		point = 0x00;
 	}
 	char chinfo[7];
-	CString2CharStar(info, chinfo, len_info);
+	CUtils::CString2CharStar(info, chinfo, len_info);
 	if(LED(chinfo, len_info, point) == IFD_OK) {
 		// 更新状态栏，成功
 		canSetLED = true;
@@ -210,6 +179,8 @@ void CDebugger::OnBnClickedBtnledset() {
 		// 更新状态栏，失败
 		canSetLED = false;
 		((CEdit*)GetDlgItem(IDC_EDITLEDSTATUS))->SetWindowTextW(_T("设置失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -254,7 +225,7 @@ void CDebugger::OnBnClickedBtnreadblock() {
 	unsigned char chpwd[8];
 	int len_chpwd = 0;
 	pwd.MakeUpper();
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取扇区号
 	int sectionNum = ((CComboBox*)GetDlgItem(IDC_COMBOSECTION))->GetCurSel();
 	if(sectionNum == CB_ERR) {
@@ -321,6 +292,8 @@ void CDebugger::OnBnClickedBtnreadblock() {
 			break;
 		}
 		((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("读取块异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -346,7 +319,7 @@ void CDebugger::OnBnClickedBtnwriteblock() {
 	//unsigned char* chpwd = (unsigned char*)(LPCTSTR)pwd;
 	unsigned char chpwd[8];
 	int len_chpwd = 0;
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取扇区
 	int sectionNum = ((CComboBox*)GetDlgItem(IDC_COMBOSECTION))->GetCurSel();
 	if(sectionNum == CB_ERR) {
@@ -407,7 +380,7 @@ void CDebugger::OnBnClickedBtnwriteblock() {
 	// 类型转换
 	unsigned char src_data[200];
 	int len_data = 0;
-	HexCString2UnsignedCharStar(block_data, src_data, &len_data);
+	CUtils::HexCString2UnsignedCharStar(block_data, src_data, &len_data);
 	// 写入块
 	if(write_block(blockNum, sectionNum, m_RatioStatus, chpwd, src_data, len_data) == IFD_OK) {
 		canIO = true;
@@ -416,6 +389,8 @@ void CDebugger::OnBnClickedBtnwriteblock() {
 	else {
 		canIO = false;
 		((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("写入块失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	
 }
@@ -443,7 +418,7 @@ void CDebugger::OnBnClickedBtnreadsection() {
 	unsigned char chpwd[8];
 	int len_chpwd = 0;
 	pwd.MakeUpper();
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取扇区号
 	int sectionNum = ((CComboBox*)GetDlgItem(IDC_COMBOSECTION))->GetCurSel();
 	if(sectionNum == CB_ERR) {
@@ -497,6 +472,8 @@ void CDebugger::OnBnClickedBtnreadsection() {
 			((CEdit*)GetDlgItem(IDC_EDITBL3DATA1))->SetWindowTextW(_T(""));
 			((CEdit*)GetDlgItem(IDC_EDITBL3DATA2))->SetWindowTextW(_T(""));
 			((CEdit*)GetDlgItem(IDC_EDITIOSTATUS))->SetWindowTextW(_T("读取扇区异常"));
+			// 蜂鸣器提示失败
+			CUtils::buzzerFailed();
 		}
 	}
 	return;

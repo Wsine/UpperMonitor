@@ -108,6 +108,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UpperMonitor.h" />
     <ClInclude Include="UpperMonitorDlg.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdoMySQLHelper.cpp" />
@@ -120,6 +121,7 @@
     </ClCompile>
     <ClCompile Include="UpperMonitor.cpp" />
     <ClCompile Include="UpperMonitorDlg.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UpperMonitor.rc" />

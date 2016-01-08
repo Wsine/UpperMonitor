@@ -29,6 +29,7 @@ private:
 	CAdoMySQLHelper adoMySQLHelper;
 	CRecordHelper fileRecordHelper;
 	UINT_PTR m_ActiveTimer;
+	bool isWritingRemainTimeTable;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
@@ -37,8 +38,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnpurseinit();
-	void CString2CharStar(const CString& s, char* ch, int len);
-	void HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* asc, int* asc_len);
 	afx_msg void OnBnClickedBtncheckbalance();
 	afx_msg void OnBnClickedBtnrecharge();
 	afx_msg void OnBnClickedBtncomsurge2();

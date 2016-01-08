@@ -5,6 +5,7 @@
 #include "UpperMonitor.h"
 #include "Appdev.h"
 #include "afxdialogex.h"
+#include "Utils.h"
 
 #pragma comment(lib, "./libs/ZM124U.lib")
 #include "./libs/ZM124U.h"
@@ -21,6 +22,7 @@ CAppdev::CAppdev(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CAppdev::IDD, pParent)
 {
 	m_font2.CreatePointFont(110, _T("华文新魏"));
+	this->isWritingRemainTimeTable = false;
 }
 
 CAppdev::~CAppdev()
@@ -55,43 +57,6 @@ BEGIN_MESSAGE_MAP(CAppdev, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNCLEARHIS, &CAppdev::OnBnClickedBtnclearhis)
 END_MESSAGE_MAP()
 
-// 自定义函数
-void CAppdev::CString2CharStar(const CString& s, char* ch, int len) {
-	int i;
-	for(i = 0; i < len; i++) {
-		ch[i] = s[i];
-	}
-	ch[i] = '\0';
-	return;
-}
-
-void CAppdev::HexCString2UnsignedCharStar(const CString& hexStr, unsigned char* asc, int* asc_len) {
-	*asc_len = 0;
-	int len = hexStr.GetLength();
-
-	char temp[200];
-	char tmp[3] = { 0 };
-	char* Hex;
-	unsigned char* p;
-
-	CString2CharStar(hexStr, temp, len);
-	Hex = temp;
-	p = asc;
-
-	while(*Hex != '\0') {
-		tmp[0] = *Hex;
-		Hex++;
-		tmp[1] = *Hex;
-		Hex++;
-		tmp[2] = '\0';
-		*p = (unsigned char)strtol(tmp, NULL, 16);
-		p++;
-		(*asc_len)++;
-	}
-	*p = '\0';
-	return;
-}
-
 CString CAppdev::GetCardUID() {
 	CString uid, temp;
 	unsigned char buff[1024];
@@ -108,8 +73,8 @@ CString CAppdev::GetCardUID() {
 		return uid;
 	}
 	else {
-		//return NOCARD;
-		return TESTCARD;
+		return NOCARD;
+		//return TESTCARD;
 	}
 }
 
@@ -137,7 +102,7 @@ void CAppdev::OnBnClickedBtnpurseinit() {
 	int len_chpwd = 0;
 	// 密钥类型转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 初始化钱包
 	if(write_account(sectionNum, blockNum, pswtype, chpwd, account) == IFD_OK) {
 		canIOPurse = true;
@@ -146,6 +111,8 @@ void CAppdev::OnBnClickedBtnpurseinit() {
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("初始化钱包失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -160,17 +127,20 @@ void CAppdev::OnBnClickedBtncheckbalance() {
 	int len_chpwd = 0;
 	// 密钥转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 读取钱包
 	if(read_account(sectionNum, blockNum, pswtype, chpwd, &account) == IFD_OK) {
 		balance.Format(_T("%d"), account);
 		((CEdit*)GetDlgItem(IDC_EDITELEBALAN))->SetWindowTextW(balance);
 		canIOPurse = true;
+		CUtils::LEDSet(account); // MayBe Wrong
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("查询钱包成功"));
 	}
 	else {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("查询钱包失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -193,7 +163,7 @@ void CAppdev::OnBnClickedBtnrecharge() {
 	int len_chpwd = 0;
 	// 密钥转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取卡号
 	CString uid = GetCardUID();
 	// 充值函数
@@ -207,6 +177,8 @@ void CAppdev::OnBnClickedBtnrecharge() {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("充值失败"));
 		fileRecordHelper.SaveRecharges(uid, addAccount, _ttol(balance), _T("失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	// 更新历史记录显示
 	OnBnClickedBtnloadhis();
@@ -236,7 +208,7 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 	int len_chpwd = 0;
 	// 密钥类型转换
 	CString pwd = _T("FFFFFFFFFFFF");
-	HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
+	CUtils::HexCString2UnsignedCharStar(pwd, chpwd, &len_chpwd);
 	// 获取卡号
 	CString uid = GetCardUID();
 	// 消费函数
@@ -250,6 +222,8 @@ void CAppdev::OnBnClickedBtncomsurge2() {
 		canIOPurse = false;
 		((CEdit*)GetDlgItem(IDC_EDITELESTATUS))->SetWindowTextW(_T("消费失败"));
 		fileRecordHelper.SaveConsumptions(uid, subAccount, _ttol(balance), _T("失败"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 	// 更新历史记录显示
 	OnBnClickedBtnloadhis();
@@ -263,6 +237,12 @@ HBRUSH CAppdev::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
 	switch(pWnd->GetDlgCtrlID()) {
 		case IDC_EDITELESTATUS:
 			if(this->canIOPurse)
+				pDC->SetTextColor(BLUE);
+			else
+				pDC->SetTextColor(RED);
+			break;
+		case IDC_EDITWEBSTATUS:
+			if (this->canIOWeb)
 				pDC->SetTextColor(BLUE);
 			else
 				pDC->SetTextColor(RED);
@@ -290,6 +270,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 		else {
 			// 当用户存在RemainTimeTable中，什么也不做
 			if (adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)){
+				this->canIOWeb = false;
 				// 更新状态栏，失败
 				((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("正在上机中"));
 			}
@@ -299,6 +280,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 				OnRecord* pRecord = (OnRecord*)adoMySQLHelper.MySQL_Query(cond, ONTABLE);
 				// 当用户已经超时
 				if (pRecord->isOvertime) {
+					this->canIOWeb = false;
 					// 更新状态栏，失败
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("已超时，请先充值"));
 					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("失败"));
@@ -306,6 +288,7 @@ void CAppdev::OnBnClickedBtnstartweb() {
 				// 用户没有超时
 				else {
 					adoMySQLHelper.MySQL_Insert(RemainTime(pRecord->UID, pRecord->RemainSeconds));
+					this->canIOWeb = true;
 					// 更新状态栏，成功
 					((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("开始上机成功"));
 					fileRecordHelper.StartNets(uid, pRecord->RemainSeconds, _T("成功"));
@@ -317,8 +300,11 @@ void CAppdev::OnBnClickedBtnstartweb() {
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -332,6 +318,7 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, ONTABLE)) {
 			CTime curTime = CTime::GetCurrentTime();
 			adoMySQLHelper.MySQL_Insert(OnRecord(uid, DEFAULTREMAINTIME, curTime.Format(TIMEFORMAT)));
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("初始化余时成功"));
 		}
@@ -340,15 +327,20 @@ void CAppdev::OnBnClickedBtnretimedefinit() {
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, ONTABLE);
 			// 如果用户正在上机，一并更新RemainTimeTable
 			if (adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+				while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 				adoMySQLHelper.MySQL_UpdateRemainTime(uid, DEFAULTREMAINTIME, REMAINTIMETABLE);
 			}
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("重设余时成功"));
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -360,15 +352,18 @@ void CAppdev::OnBnClickedBtnexitweb() {
 	if (uid != NOCARD) {
 		// 用户没有在上机
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+			this->canIOWeb = false;
 			// 更新状态栏，失败
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机，无法退出"));
 		}
 		// 用户正在上机
 		else {
 			CString cond = _T("UID=\'") + uid + _T("\'");
+			while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 			RemainTime* pRemainTime = (RemainTime*)adoMySQLHelper.MySQL_Query(cond, REMAINTIMETABLE);
 			adoMySQLHelper.MySQL_Delete(uid, REMAINTIMETABLE); // 删除RemainTimeTable记录，退出上机
 			adoMySQLHelper.MySQL_UpdateRemainTime(uid, pRemainTime->RemainSeconds, ONTABLE); // 更新OnTable
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("成功退出上机"));
 			fileRecordHelper.ExitNets(uid, pRemainTime->RemainSeconds, DEFAULTREMAINTIME, _T("成功")); // TODO: Fix OverTime
@@ -378,8 +373,11 @@ void CAppdev::OnBnClickedBtnexitweb() {
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -389,8 +387,10 @@ void CAppdev::OnBnClickedBtncheckretime() {
 
 	// 成功获取
 	if (uid != NOCARD) {
+		while (this->isWritingRemainTimeTable) { Sleep(100); } // 休眠0.1s等待定时器操作完成
 		// 用户没有在上机
 		if (!adoMySQLHelper.MySQL_QueryByUID(uid, REMAINTIMETABLE)) {
+			this->canIOWeb = false;
 			// 更新状态栏，失败
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("没有在上机"));
 		}
@@ -408,14 +408,18 @@ void CAppdev::OnBnClickedBtncheckretime() {
 			((CEdit*)GetDlgItem(IDC_EDITREHOUR))->SetWindowTextW(remainHours);
 			((CEdit*)GetDlgItem(IDC_EDITREMINUTE))->SetWindowTextW(remainMinutes);
 			((CEdit*)GetDlgItem(IDC_EDITRESECOND))->SetWindowTextW(remainSeconds);
+			this->canIOWeb = true;
 			// 更新状态栏，成功
 			((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("查询余时成功"));
 			delete(pRemainTime); // important!
 		}
 	}
 	else {
+		this->canIOWeb = false;
 		// 更新状态栏，失败
 		((CEdit*)GetDlgItem(IDC_EDITWEBSTATUS))->SetWindowTextW(_T("获取卡号异常"));
+		// 蜂鸣器提示失败
+		CUtils::buzzerFailed();
 	}
 }
 
@@ -434,7 +438,9 @@ void CAppdev::OnTimer(UINT_PTR nIDEvent){
 	// 在此添加消息处理程序代码和/或调用默认值
 	switch (nIDEvent){
 		case SCANTIMER_ID:
+			this->isWritingRemainTimeTable = true;
 			adoMySQLHelper.MySQL_ScanOnTable(SCANTIMER);
+			this->isWritingRemainTimeTable = false;
 			break;
 		default:
 			break;
