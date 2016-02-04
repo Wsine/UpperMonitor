@@ -43,4 +43,4 @@ Internet of Things Concept's Project
 ## 注意
 
 1. AdoMySQLHelper类中的MySQL_Connect函数中声明的参数需要和运行环境配置的Ado一致
-2. UpperMonitor\log\records.txt是代码生成的历史记录功能,gitingore过滤了log文件夹,请自行添加该文件夹
+2. 运行时如果发现缺少dll文件，可以复制UpperMonitor\libs\下的dll文件到Debug\目录下，和UpperMonitor.exe同级
